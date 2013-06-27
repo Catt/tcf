@@ -26,7 +26,7 @@ class Sandbox(Room):
     def event_create(self):
         self.setBackground(self.assets.images["background"]["sky.png"])
         self.g = Grid(16,0,0,300,100)
-        for i in range(1,50):
+        for i in range(1,99):
             for j in range(35,45):
                 dirt = Dirt(self.g,(i,j))
                 self.game.createInstance(dirt)
