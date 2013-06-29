@@ -25,39 +25,67 @@ class Player(Object):
         self.v_x = 0
         self.v_y = 0
         self.jumpno = 0
-        self.jumping = False
+        self.aerial = False
+        self.prev_up = False
+        self.prev_left = False
+        self.prev_right = False
     
     def event_create(self):
         self.setSprite(Sprite(self.assets.images["boy"]["boy_idle"],32,64),-16,-32)
         self.sprite.setFrameTime(15)
-        
+     
+    def update_keys(self):
+        self.prev_up = self.game.keys[K_w]
+        self.prev_left = self.game.keys[K_a]
+        self.prev_right = self.game.keys[K_d]
+           
     def update(self):
         
         #Keys
-        if self.game.keys[K_a]:
-            if self.v_x >= -self.v_x_max:
-                self.v_x -= self.acc
-            else:
-                self.v_x = -self.v_x_max
-        if self.game.keys[K_d]:
-            if self.v_x <= self.v_x_max:
-                self.v_x += self.acc
-            else:
-                self.v_x = self.v_x_max
-        if  self.game.keys[K_w]:
-            if self.jumpno < 2 and not self.jumping:
-                self.jumping = True
+        #Movement varies based on whether the player is aerial or not
+        if self.aerial:
+            if self.game.keys[K_a]:
+                if self.v_x >= -self.v_x_max:
+                    self.v_x -= self.acc
+                else:
+                    self.v_x = -self.v_x_max
+            if self.game.keys[K_d]:
+                if self.v_x <= self.v_x_max:
+                    self.v_x += self.acc
+                else:
+                    self.v_x = self.v_x_max
+            if  self.game.keys[K_w]:
+                if self.jumpno < 2:
+                    if not self.prev_up:
+                        self._jump = self.jump
+                        self._jumpdecay = self.jumpdecay
+                        self.v_y = 0
+                        self.jumpno += 1
+                    
+                self.v_y -= self._jump
+                self._jump *= self._jumpdecay
+                self._jumpdecay *= self._jumpdecay
+                
+        #On the ground
+        else:
+            if self.game.keys[K_a]:
+                if self.v_x >= -self.v_x_max:
+                    self.v_x -= self.acc
+                else:
+                    self.v_x = -self.v_x_max
+            if self.game.keys[K_d]:
+                if self.v_x <= self.v_x_max:
+                    self.v_x += self.acc
+                else:
+                    self.v_x = self.v_x_max
+            if  self.game.keys[K_w]:
+                self.aerial = True
                 self._jump = self.jump
                 self._jumpdecay = self.jumpdecay
-                self.jumpno += 1
-                
-            self.v_y -= self._jump
-            self._jump *= self._jumpdecay
-            self._jumpdecay *= self._jumpdecay
-        
-        elif self.jumping and not self.game.keys[K_w]:
-            self.jumping = False
-            
+                    
+                self.v_y -= self._jump
+                self._jump *= self._jumpdecay
+                self._jumpdecay *= self._jumpdecay
         
         if self.v_x != 0:
             if self._isWalking == 0:
@@ -118,12 +146,17 @@ class Player(Object):
             if mod == 32 and hazardy.y <= self.y+33:
                 self._jump = self.jump
                 self._jumpdecay = self.jumpdecay
-                self.jumpno = 0    
-                self.jumping = False   
+                self.jumpno = 1    
+                self.aerial = False
+                
+            #The player hits something above it       
             elif mod == -32:
-                self._jump = 0     
+                self._jump = 0   
+                
+        #nothing above or below  
         else:
             self.friction = 0
+            self.aerial = True
         
         # Hazard side
         if(self.v_x > 0):
@@ -167,4 +200,5 @@ class Player(Object):
                 self.v_x = 0
         
         self.move(self.v_x, newy)
+        self.update_keys()
         
