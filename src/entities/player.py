@@ -23,7 +23,7 @@ class Player(Object):
         self._isWalking = 0
         self.friction = 0
         self.air_friction = 0
-        self.walk = 15
+        self.walk = 8
         self.dash = 15
         self.dashing = False
         self.v_y_max = 300
@@ -80,7 +80,6 @@ class Player(Object):
             self.dashing = False
         elif timeBetweenTaps < 200:
             self.dashing = True
-            print ("new dash")
         else:
             self.dashing = False
            
@@ -102,15 +101,15 @@ class Player(Object):
                 self._jump *= self._jumpdecay
                 self._jumpdecay *= self._jumpdecay
             if self.game.keys[K_a]:
-                if self.v_x > -self.v_x_max:
+                if self.v_x > -self.v_x_maxair:
                     self.v_x -= self.aerial_acc
                 else:
-                    self.v_x = -self.v_x_max
+                    self.v_x = -self.v_x_maxair/(1-self.air_friction)
             elif self.game.keys[K_d]:
-                if self.v_x < self.v_x_max:
+                if self.v_x < self.v_x_maxair:
                     self.v_x += self.aerial_acc
                 else:
-                    self.v_x = self.v_x_max
+                    self.v_x = self.v_x_maxair/(1-self.air_friction)
             
                 
         #On the ground
@@ -123,15 +122,16 @@ class Player(Object):
                 acc = self.walk_acc
                 
             if self.game.keys[K_a]:
-                    if self.v_x >= -max_speed:
-                        self.v_x -= acc
-                    else:
-                        self.v_x = -max_speed
+                if self.v_x > -max_speed:
+                    self.v_x -= acc
+                else:
+                    self.v_x = -max_speed/(1-self.friction)
+      
             if self.game.keys[K_d]:
-                if self.v_x <= max_speed:
+                if self.v_x < max_speed:
                     self.v_x += acc
                 else:
-                    self.v_x = max_speed
+                    self.v_x = max_speed/(1-self.friction)
             if  self.game.keys[K_w]:
                 self.aerial = True
                 self._jump = self.jump
@@ -144,6 +144,7 @@ class Player(Object):
                     self.v_x_max = math.fabs(self.v_x)
                 else:
                     self.v_x_max = self.v_x_maxair
+                    
         if self.v_x != 0:
             if self._isWalking == 0:
                 self.setSprite(Sprite(self.assets.images["boy"]["boy_walk"],32,64))
@@ -171,10 +172,9 @@ class Player(Object):
             self.v_y = self.v_y_max #Terminal velocity
         if self.aerial:
             self.v_x = self.v_x * (1-self.air_friction)
-            print("Air friction = %f"%self.air_friction)
         else:
             self.v_x = self.v_x * (1-self.friction)
-            print("Ground friction = %f"%self.friction)
+            print("After Friction: %d"%self.v_x)
         if math.fabs(self.v_x) < 0.3:
             self.v_x = 0
         # Hazard top/below
@@ -253,13 +253,11 @@ class Player(Object):
                 self.setX(x-mod)
                 self.v_x = 0
                 self.v_y = -3.5
-                
             else:
                 x,y = self.g.getPosition(x,y)
                 self.setX(x-mod) 
                 self.v_x = 0
-        
-        print("Moving %d"%self.v_x)
+
         self.move(self.v_x, newy)
         self.update_keys()
         
