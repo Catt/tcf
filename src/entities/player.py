@@ -174,10 +174,10 @@ class Player(Object):
             self.v_x = self.v_x * (1-self.air_friction)
         else:
             self.v_x = self.v_x * (1-self.friction)
-            print("After Friction: %d"%self.v_x)
         if math.fabs(self.v_x) < 0.3:
             self.v_x = 0
         # Hazard top/below
+        landing = False
         if(self.v_y > 0):
             mod = 32
         else:
@@ -187,6 +187,8 @@ class Player(Object):
         hy[0] = self.g.get(x,y)
         x,y, = self.g.atPosition(self.x+self.v_x,self.y+newy+mod)
         hy[1] = self.g.get(x,y)
+        if hy[1]:
+            landing = True
         x,y, = self.g.atPosition(self.x+self.v_x+13,self.y+newy+mod)
         hy[2] = self.g.get(x,y)
         if mod < 0:
@@ -199,20 +201,22 @@ class Player(Object):
         if hazardy:
             x,y = self.g.getPosition(x,y)
             self.setY(y-mod)
-            self.v_y = 0
-            newy = 0
             self.friction = hazardy.friction
             
+            if landing:
+                self.v_y = 0
+                newy = 0
             #The player lands on something
-            if mod == 32 and hazardy.y <= self.y+33:
+            if mod == 32 and hazardy.y <= self.y+33 and landing:
                 self._jump = self.jump
                 self._jumpdecay = self.jumpdecay
                 self.jumpno = 1    
                 self.aerial = False
-                
+              
             #The player hits something above it       
             elif mod == -32:
-                self._jump = 0   
+                self._jump = 0  
+                print("Hit") 
                 
         #nothing above or below  
         else:
@@ -257,7 +261,6 @@ class Player(Object):
                 x,y = self.g.getPosition(x,y)
                 self.setX(x-mod) 
                 self.v_x = 0
-
         self.move(self.v_x, newy)
         self.update_keys()
         
