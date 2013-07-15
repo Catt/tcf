@@ -14,7 +14,7 @@ if __name__ == '__main__':
     #Initialize the game
     game = Pygmi((800,600), "TFC", 0)
     assets = game.getAssetManager()
-    #Make a room
+    #Make a roomddd
     game.addRoom(Sandbox(800,600))
     
     #Start the room

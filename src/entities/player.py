@@ -15,7 +15,8 @@ class Player(Object):
         self.grav = 25
         self.walk_acc = 2
         self.dash_acc = 8
-        self.aerial_acc = 2
+        self.aerial_acc_max = 2
+        self.aerial_acc = 0.5
         self.jump = 200
         self.jumpdecay = 0.85
         self._jump = 0 
@@ -27,9 +28,8 @@ class Player(Object):
         self.dash = 15
         self.dashing = False
         self.v_y_max = 300
-        self.v_x_max = 0
-        self.v_x_maxair = self.walk
         self.v_x = 0
+        self.v_air_max = self.walk/2
         self.v_y = 0
         self.jumpno = 0
         self.aerial = False
@@ -87,6 +87,12 @@ class Player(Object):
         self.update_dashing()
         #Keys
         #Movement varies based on whether the player is aerial or not
+        if self.dashing:
+            max_speed = self.dash
+            acc = self.dash_acc
+        else:
+            max_speed = self.walk
+            acc = self.walk_acc
         if self.aerial:
             if  self.game.keys[K_w]:
                 if self.jumpno < 2:
@@ -101,49 +107,51 @@ class Player(Object):
                 self._jump *= self._jumpdecay
                 self._jumpdecay *= self._jumpdecay
             if self.game.keys[K_a]:
-                if self.v_x > -self.v_x_maxair:
+                if self.v_x > -self.v_air_max:
                     self.v_x -= self.aerial_acc
+                    self.aerial_acc *= 1.05
+                    if self.aerial_acc > self.aerial_acc_max:
+                        self.aerial_acc = self.aerial_acc_max
                 else:
-                    self.v_x = -self.v_x_maxair/(1-self.air_friction)
+                    self.v_x = -self.v_air_max/(1-self.air_friction)
             elif self.game.keys[K_d]:
-                if self.v_x < self.v_x_maxair:
+                if self.v_x < self.v_air_max:
                     self.v_x += self.aerial_acc
+                    self.aerial_acc *= 1.05
+                    if self.aerial_acc > self.aerial_acc_max:
+                        self.aerial_acc = self.aerial_acc_max
                 else:
-                    self.v_x = self.v_x_maxair/(1-self.air_friction)
+                    self.v_x = self.v_air_max/(1-self.air_friction)
             
                 
         #On the ground
         else:
-            if self.dashing:
-                max_speed = self.dash
-                acc = self.dash_acc
-            else:
-                max_speed = self.walk
-                acc = self.walk_acc
+            if  self.game.keys[K_w] and not self.prev_up:
+                self.aerial = True
+                self._jump = self.jump
+                self._jumpdecay = self.jumpdecay
+                self.aerial_acc = 0.5 
+                self.v_air_max = abs(self.v_x)
+                if self.v_air_max < self.walk/2:
+                    self.v_air_max = self.walk/2  
+                self.v_y -= self._jump
+                self._jump *= self._jumpdecay
+                self._jumpdecay *= self._jumpdecay
+                print("self.v_air_max = %f"%self.v_air_max)
                 
-            if self.game.keys[K_a]:
+            elif self.game.keys[K_a]:
                 if self.v_x > -max_speed:
                     self.v_x -= acc
                 else:
                     self.v_x = -max_speed/(1-self.friction)
       
-            if self.game.keys[K_d]:
+            elif self.game.keys[K_d]:
                 if self.v_x < max_speed:
                     self.v_x += acc
                 else:
                     self.v_x = max_speed/(1-self.friction)
-            if  self.game.keys[K_w]:
-                self.aerial = True
-                self._jump = self.jump
-                self._jumpdecay = self.jumpdecay
-                    
-                self.v_y -= self._jump
-                self._jump *= self._jumpdecay
-                self._jumpdecay *= self._jumpdecay
-                if self.dashing:
-                    self.v_x_max = math.fabs(self.v_x)
-                else:
-                    self.v_x_max = self.v_x_maxair
+            
+                
                     
         if self.v_x != 0:
             if self._isWalking == 0:
@@ -216,7 +224,7 @@ class Player(Object):
             #The player hits something above it       
             elif mod == -32:
                 self._jump = 0  
-                print("Hit") 
+               
                 
         #nothing above or below  
         else:
@@ -262,5 +270,6 @@ class Player(Object):
                 self.setX(x-mod) 
                 self.v_x = 0
         self.move(self.v_x, newy)
+        print(self.v_x)
         self.update_keys()
         
