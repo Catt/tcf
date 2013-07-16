@@ -192,18 +192,20 @@ class Player(Object):
             mod = 32
         else:
             mod = -32
-        hy = [None]*4
+        hy = [None]*5
         x,y, = self.g.atPosition(self.x+self.v_x-14,self.y+newy+mod)
         hy[0] = self.g.get(x,y)
-        x,y, = self.g.atPosition(self.x+self.v_x-1,self.y+newy+mod)
+        x,y, = self.g.atPosition(self.x+self.v_x-8,self.y+newy+mod)
         hy[1] = self.g.get(x,y)
         x,y, = self.g.atPosition(self.x+self.v_x,self.y+newy+mod)
         hy[2] = self.g.get(x,y)
-        if hy[1] or hy[2]:
+        x,y, = self.g.atPosition(self.x+self.v_x+8,self.y+newy+mod)
+        hy[3] = self.g.get(x,y)
+        if hy[1] or hy[2] or hy[3]:
             landing = True
            
         x,y, = self.g.atPosition(self.x+self.v_x+13,self.y+newy+mod)
-        hy[3] = self.g.get(x,y)
+        hy[4] = self.g.get(x,y)
         if mod < 0:
             mod -= 16
 
