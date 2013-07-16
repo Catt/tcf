@@ -133,7 +133,9 @@ class Player(Object):
                 self.aerial_acc = 0.5 
                 self.v_air_max = abs(self.v_x)
                 if self.v_air_max < self.walk/2:
-                    self.v_air_max = self.walk/2  
+                    self.v_air_max = self.walk/2
+                elif self.v_air_max > self.dash:
+                    self.v_air_max = self.dash  
                 self.v_y -= self._jump
                 self._jump *= self._jumpdecay
                 self._jumpdecay *= self._jumpdecay
@@ -190,17 +192,21 @@ class Player(Object):
             mod = 32
         else:
             mod = -32
-        hy = [None]*3
+        hy = [None]*4
         x,y, = self.g.atPosition(self.x+self.v_x-14,self.y+newy+mod)
         hy[0] = self.g.get(x,y)
-        x,y, = self.g.atPosition(self.x+self.v_x,self.y+newy+mod)
+        x,y, = self.g.atPosition(self.x+self.v_x-1,self.y+newy+mod)
         hy[1] = self.g.get(x,y)
-        if hy[1]:
-            landing = True
-        x,y, = self.g.atPosition(self.x+self.v_x+13,self.y+newy+mod)
+        x,y, = self.g.atPosition(self.x+self.v_x,self.y+newy+mod)
         hy[2] = self.g.get(x,y)
+        if hy[1] or hy[2]:
+            landing = True
+           
+        x,y, = self.g.atPosition(self.x+self.v_x+13,self.y+newy+mod)
+        hy[3] = self.g.get(x,y)
         if mod < 0:
             mod -= 16
+
         hazardy = None
         for h in hy:
             if h:
@@ -223,7 +229,9 @@ class Player(Object):
               
             #The player hits something above it       
             elif mod == -32:
-                self._jump = 0  
+                self._jump = 0
+                self.newy = 0
+                self.v_y = 0  
                
                 
         #nothing above or below  
